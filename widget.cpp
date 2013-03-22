@@ -11,9 +11,9 @@ Widget::Widget(QWidget *parent) :
 	ui->hSliderBrightness->setRange(-100, 100);
 	ui->hSliderBrightness->setPageStep(10);
 	ui->hSliderBrightness->setSingleStep(1);
-	ui->hSliderBrightness->setValue(0);
+	//ui->hSliderBrightness->setValue(0);
 	ui->lineEditBrightness->setReadOnly(true);
-    ui->lineEditBrightness->setText(tr("0"));
+	ui->lineEditBrightness->setText(tr("0"));
 
 	iOldBrightness = 0;
 	connect(&process, SIGNAL(finished(int)), this, SLOT(ProcessFinished(int)));
@@ -34,6 +34,8 @@ void Widget::on_hSliderBrightness_valueChanged(int value)
 {
     iBrightness = value;
     ui->lineEditBrightness->setText(QString::number(iBrightness));
+	ui->btnApply->setEnabled(true);
+	ui->btnReset->setEnabled(true);
 }
 
 int Widget::get_brightness()
@@ -52,6 +54,7 @@ void Widget::set_brightess(int value)
 	process.start("aticonfig", args, QIODevice::ReadOnly);
 	//run command: aticonfig --set-dispattrib=lvds,brightness:value
 	//set brightness
+
 }
 
 void Widget::ProcessFinished(int exitCode)
@@ -89,17 +92,20 @@ void Widget::ProcessFinished(int exitCode)
 			"12" = "step:1
 			"
 		 */
-		//for(int i = 0; i < listOutput.size(); i++) qDebug()<<QString::number(i)<<"="<<listOutput.at(i);
+		for(int i = 0; i < listOutput.size(); i++) qDebug()<<QString::number(i)<<"="<<listOutput.at(i);
 		iDefaultBrightness = listOutput.at(8).split(':').at(1).toInt();//get default value
-		iBrightness = iOldBrightness = listOutput.at(9).split(':').at(1).toInt();//get value
-		ui->hSliderBrightness->setValue(iBrightness);//update to UI.
+		QString tmp = listOutput.at(9).split(':').at(1);
+		iBrightness = iOldBrightness = tmp.left(tmp.length()-1).toInt();//get value
+		ui->hSliderBrightness->setValue(iOldBrightness);//update to UI.
+		ui->btnReset->setEnabled(false);
+		ui->btnApply->setEnabled(false);
 	}
 }
 
 void Widget::on_btnDefault_clicked()
 {
 	iBrightness = iDefaultBrightness;
-	set_brightess(iDefaultBrightness);
+	//set_brightess(iDefaultBrightness);
 	ui->hSliderBrightness->setValue(iBrightness);
 }
 
@@ -107,12 +113,16 @@ void Widget::on_btnReset_clicked()
 {
 	iBrightness = iOldBrightness;
 	ui->hSliderBrightness->setValue(iBrightness);
+	ui->btnApply->setEnabled(false);
+	ui->btnReset->setEnabled(false);
 }
 
 void Widget::on_btnApply_clicked()
 {
 	iBrightness = ui->hSliderBrightness->value();
 	set_brightess(iBrightness);
+	ui->btnApply->setEnabled(false);
+	ui->btnReset->setEnabled(false);
 }
 
 void Widget::on_btnQuit_clicked()
